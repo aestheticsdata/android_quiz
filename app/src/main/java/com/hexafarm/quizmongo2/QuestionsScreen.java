@@ -12,6 +12,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 
 public class QuestionsScreen extends ActionBarActivity {
@@ -27,6 +32,7 @@ public class QuestionsScreen extends ActionBarActivity {
     private int selectedAnswer           = 0;
     private ArrayAdapter<String> adapter = null;
     private TextView question_tf         = null;
+    private List<Integer> storedAnswer   = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +41,6 @@ public class QuestionsScreen extends ActionBarActivity {
 
         this.postInit();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -59,17 +64,29 @@ public class QuestionsScreen extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+
     private void postInit() {
 
         Intent intent = getIntent();
 
-        String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+        String json = intent.getStringExtra(MainActivity.QUESTIONS_JSON);
 
-        qs = new QuestionsService(message);
+        qs = new QuestionsService(json);
 
-        question = qs.questionsVO.get(currentQuestion); // get the first questions
+        question = qs.questionsVO[currentQuestion];
 
-        adapter = new ArrayAdapter<String>(QuestionsScreen.this, android.R.layout.simple_list_item_single_choice, question.getChoices());
+        //adapter = new ArrayAdapter<String>(QuestionsScreen.this, android.R.layout.simple_list_item_single_choice, question.getChoices());
+
+        // if fake is not used at the adapter initialization, and adapter cleared just after
+        // then qs.questionsVO.get(0) array will be cleared.
+        // Is it a bug with ArrayAdapter ?
+        // maybe an answer : http://www.piwai.info/android-adapter-good-practices/
+        List fake = new ArrayList();
+        adapter = new ArrayAdapter<String>(QuestionsScreen.this, android.R.layout.simple_list_item_single_choice, fake);
+        adapter.clear();
+        adapter.addAll(question.getChoices());
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         listView = (ListView) findViewById(R.id.lvitems);
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
@@ -94,8 +111,7 @@ public class QuestionsScreen extends ActionBarActivity {
         question_tf = (TextView) findViewById(R.id.question);
         question_tf.setText(question.getQuestion());
 
-        //if (currentQuestion == 0) {
-        if (true) {
+        if (currentQuestion == 0) {
             previousBtn = (Button) findViewById(R.id.previousBtn);
             previousBtn.setEnabled(false);
         }
@@ -118,38 +134,96 @@ public class QuestionsScreen extends ActionBarActivity {
                 }
         );
 
+        previousBtn.setOnClickListener(
+                new Button.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        processPreviousQuestion();
+                    }
+                }
+        );
+
     }
 
+
+
     private void processNextQuestion() {
+
+        Log.i(MainActivity.FOO, "++++++++++++++++++++++++++++++++++++++++++++++++++");
+        for (int k=0; k<qs.questionsVO.length; k++) {
+            Log.i(MainActivity.FOO, ">>>>>>>>>> k : "+k+" / " + qs.questionsVO[k].getChoices());
+        }
+        Log.i(MainActivity.FOO, "++++++++++++++++++++++++++++++++++++++++++++++++++");
+        //Log.i(MainActivity.FOO, ">>>>>>>>>> " + qs.questionsVO[0].getChoices());
+
+        previousBtn.setEnabled(true);
 
         currentQuestion++;
 
         adapter.clear();
+        //adapter.remove(adapter.getItem(0));
 
-        selectedAnswer = 0; // re-init selectedAnswer because if the correct answer is 0 and nothing is clicked, the value of selectedAnswer will be the previous one
 
-        if (currentQuestion < qs.questionsVO.size()) {
+        if (currentQuestion < qs.questionsVO.length) {
 
-            listView.setItemChecked(0, true);
+            if (storedAnswer.size() == currentQuestion+1) { // check to see if it's the first or not
+                listView.setItemChecked(storedAnswer.get(currentQuestion), true);
+            } else {
+                storedAnswer.add(selectedAnswer);
+                listView.setItemChecked(0, true);
+                selectedAnswer = 0; // re-init selectedAnswer because if the correct answer is 0 and nothing is clicked, the value of selectedAnswer will be the previous one
+            }
 
-            question = qs.questionsVO.get(currentQuestion);
+            question = qs.questionsVO[currentQuestion];
 
             adapter.addAll(question.getChoices());
 
+
             question_tf.setText(question.getQuestion());
 
-            Log.i(MainActivity.TAG, "selectedAnswer : " + selectedAnswer);
-            Log.i(MainActivity.TAG, "correct answer : " + question.getCorrectAnswer());
+        } else { // no more questions
 
-            /*if (selectedAnswer == question.getCorrectAnswer() ) {
-                Log.i(MainActivity.TAG, "score++");
-                score += 1;
-            }*/
-        } else {
+            question_tf.setText("");
+            previousBtn.setEnabled(false);
+            nextBtn.setEnabled(false);
 
-            Log.i(MainActivity.TAG, "no more questions");
+            Toast.makeText(this, "Score : " + score, Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+
+    private void processPreviousQuestion() {
+
+
+        Log.i(MainActivity.FOO, "--------------------------------------------------");
+        for (int k=0; k<qs.questionsVO.length; k++) {
+            Log.i(MainActivity.FOO, ">>>>>>>>>> k : "+k+" / " + qs.questionsVO[k].getChoices());
+        }
+        Log.i(MainActivity.FOO, "--------------------------------------------------");
+
+        currentQuestion--;
+
+        adapter.clear();
+
+        selectedAnswer = storedAnswer.get(currentQuestion);
+
+        listView.setItemChecked(selectedAnswer, true);
+
+        if (currentQuestion == 0) {
+
+            previousBtn.setEnabled(false);
         }
 
-        Log.i(MainActivity.TAG, "score : " + score);
+        question = qs.questionsVO[currentQuestion];
+
+        adapter.addAll(question.getChoices());
+
+        question_tf.setText(question.getQuestion());
+
+        Log.i(MainActivity.TAG, "selectedAnswer : " + selectedAnswer);
+        Log.i(MainActivity.TAG, "correct answer : " + question.getCorrectAnswer());
+
     }
 }

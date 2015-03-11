@@ -1,11 +1,13 @@
 package com.hexafarm.quizmongo2;
 
+import android.util.Log;
+
 import java.util.List;
 
 public class QuestionVO {
 
     private String question = "";
-    private List choices = null;
+    private final List choices;
     private int correctAnswer = -1;
 
     QuestionVO(String question, List choices, int correctAnswer) {

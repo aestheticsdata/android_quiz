@@ -37,8 +37,9 @@ public class MainActivity extends ActionBarActivity implements Serializable {
 
 
     public static String TAG = "quiz";
+    public static String FOO = "foo";
 
-    public final static String EXTRA_MESSAGE = "com.hexafarm.quizmongo2.MESSAGE";
+    public final static String QUESTIONS_JSON = "com.hexafarm.quizmongo2.MESSAGE";
 
 
     private String username = "";
@@ -160,7 +161,7 @@ public class MainActivity extends ActionBarActivity implements Serializable {
                 //Bundle bundle = new Bundle();
                 //bundle.putSerializable(MainActivity.EXTRA_MESSAGE, new QuestionsService(result));
 
-                questionIntent.putExtra(EXTRA_MESSAGE, result);
+                questionIntent.putExtra(QUESTIONS_JSON, result);
                 //new QuestionsService(result);
                 //questionIntent.putExtra(EXTRA_MESSAGE, new QuestionsService(result));
 

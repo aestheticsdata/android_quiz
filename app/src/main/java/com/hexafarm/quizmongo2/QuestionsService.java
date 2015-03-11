@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,12 +14,15 @@ public class QuestionsService implements Serializable {
 
     public JSONArray jsonQuestions = null;
     public String json = null;
-    public List<QuestionVO> questionsVO = new ArrayList<>();
+    //public List<QuestionVO> questionsVO = new ArrayList<>();
+    public QuestionVO[] questionsVO = null;
 
     QuestionsService(String json) {
         this.json = json;
         try {
             jsonQuestions = new JSONArray(json);
+
+            questionsVO = new QuestionVO[jsonQuestions.length()];
 
             for(int i=0; i<jsonQuestions.length(); i++) {
 
@@ -51,7 +55,8 @@ public class QuestionsService implements Serializable {
                     choices.add(jsonArray.get(j).toString());
                 }
 
-                questionsVO.add(new QuestionVO(question, choices, correctAnswer));
+                //questionsVO.add(new QuestionVO(question, choices, correctAnswer));
+                questionsVO[i] = new QuestionVO(question, choices, correctAnswer);
 
             }
         } catch (JSONException e) {
