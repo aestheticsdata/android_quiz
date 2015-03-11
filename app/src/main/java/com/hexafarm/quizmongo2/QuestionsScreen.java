@@ -156,7 +156,7 @@ public class QuestionsScreen extends ActionBarActivity {
 
         adapter.clear();
 
-        if (currentQuestion == qs.questionsVO.length-1) { // no more questions
+        if (currentQuestion == qs.questionsVO.length) { // no more questions
 
             computeScore();
 
@@ -164,9 +164,10 @@ public class QuestionsScreen extends ActionBarActivity {
 
             if (storedAnswer[currentQuestion] == -1) {
 
-                Log.i(MainActivity.TAG, "storedAnswer[currentQuestion] : " + storedAnswer[currentQuestion]);
                 selectedAnswer = 0; // re-init selectedAnswer because if the correct answer is 0 and nothing is clicked, the value of selectedAnswer will be the previous one
+
             } else {
+
                 selectedAnswer = storedAnswer[currentQuestion];
             }
 
