@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 
 public class QuestionsScreen extends ActionBarActivity {
@@ -109,7 +108,7 @@ public class QuestionsScreen extends ActionBarActivity {
         );
 
         storedAnswer = new int[qs.questionsVO.length];
-        Log.i(MainActivity.FOO, "storedAnswer length : " + storedAnswer.length);
+        for (int i=0; i<storedAnswer.length; i++) storedAnswer[i] = -1;
 
         question_tf = (TextView) findViewById(R.id.question);
         question_tf.setText(question.getQuestion());
@@ -127,11 +126,8 @@ public class QuestionsScreen extends ActionBarActivity {
                     @Override
                     public void onClick(View v) {
 
-                        /*if (selectedAnswer == question.getCorrectAnswer()) {
-                            Log.i(MainActivity.TAG, "score++");
-                            score += 1;
-                        }*/
-
+                        storedAnswer[currentQuestion] = selectedAnswer;
+                        currentQuestion++;
                         processNextQuestion();
                     }
                 }
@@ -142,6 +138,9 @@ public class QuestionsScreen extends ActionBarActivity {
 
                     @Override
                     public void onClick(View v) {
+
+                        storedAnswer[currentQuestion] = selectedAnswer;
+                        currentQuestion--;
                         processPreviousQuestion();
                     }
                 }
@@ -157,35 +156,28 @@ public class QuestionsScreen extends ActionBarActivity {
 
         adapter.clear();
 
-        if (currentQuestion < qs.questionsVO.length) {
-
-            if (storedAnswer.length == currentQuestion+1) { // check to see if it's the first or not
-                listView.setItemChecked(storedAnswer[currentQuestion], true);
-            } else {
-                storedAnswer[currentQuestion] = selectedAnswer;
-                Log.i(MainActivity.TAG, "storedAnswer[currentQuestion] : " + storedAnswer[currentQuestion]);
-                listView.setItemChecked(0, true);
-                selectedAnswer = 0; // re-init selectedAnswer because if the correct answer is 0 and nothing is clicked, the value of selectedAnswer will be the previous one
-            }
-
-            currentQuestion++;
-
-            if (currentQuestion == qs.questionsVO.length) { // no more questions
-
-                computeScore();
-
-            } else {
-
-                question = qs.questionsVO[currentQuestion];
-
-                adapter.addAll(question.getChoices());
-
-                question_tf.setText(question.getQuestion());
-            }
-
-        } else { // no more questions
+        if (currentQuestion == qs.questionsVO.length-1) { // no more questions
 
             computeScore();
+
+        } else {
+
+            if (storedAnswer[currentQuestion] == -1) {
+
+                Log.i(MainActivity.TAG, "storedAnswer[currentQuestion] : " + storedAnswer[currentQuestion]);
+                selectedAnswer = 0; // re-init selectedAnswer because if the correct answer is 0 and nothing is clicked, the value of selectedAnswer will be the previous one
+            } else {
+                selectedAnswer = storedAnswer[currentQuestion];
+            }
+
+
+            question = qs.questionsVO[currentQuestion];
+
+            adapter.addAll(question.getChoices());
+
+            question_tf.setText(question.getQuestion());
+
+            listView.setItemChecked(selectedAnswer, true);
         }
     }
 
@@ -193,16 +185,14 @@ public class QuestionsScreen extends ActionBarActivity {
 
     private void processPreviousQuestion() {
 
-        currentQuestion--;
-
         adapter.clear();
-
-        selectedAnswer = storedAnswer[currentQuestion];
 
         if (currentQuestion == 0) {
 
             previousBtn.setEnabled(false);
         }
+
+        selectedAnswer = storedAnswer[currentQuestion];
 
         question = qs.questionsVO[currentQuestion];
 
