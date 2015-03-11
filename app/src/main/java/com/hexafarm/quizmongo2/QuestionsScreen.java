@@ -22,17 +22,17 @@ import java.util.ListIterator;
 public class QuestionsScreen extends ActionBarActivity {
 
 
-    private ListView listView            = null;
-    private QuestionsService qs          = null;
-    private int currentQuestion          = 0;
-    private Button previousBtn           = null;
-    private Button nextBtn               = null;
-    private int score                    = 0;
-    private QuestionVO question          = null;
-    private int selectedAnswer           = 0;
-    private ArrayAdapter<String> adapter = null;
-    private TextView question_tf         = null;
-    private List<Integer> storedAnswer   = new ArrayList<>();
+    private ListView             listView        = null;
+    private QuestionsService     qs              = null;
+    private int                  currentQuestion = 0;
+    private Button               previousBtn     = null;
+    private Button               nextBtn         = null;
+    private int                  score           = 0;
+    private QuestionVO           question        = null;
+    private int                  selectedAnswer  = 0;
+    private ArrayAdapter<String> adapter         = null;
+    private TextView             question_tf     = null;
+    private int[]                storedAnswer    = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +108,9 @@ public class QuestionsScreen extends ActionBarActivity {
                 }
         );
 
+        storedAnswer = new int[qs.questionsVO.length];
+        Log.i(MainActivity.FOO, "storedAnswer length : " + storedAnswer.length);
+
         question_tf = (TextView) findViewById(R.id.question);
         question_tf.setText(question.getQuestion());
 
@@ -124,10 +127,10 @@ public class QuestionsScreen extends ActionBarActivity {
                     @Override
                     public void onClick(View v) {
 
-                        if (selectedAnswer == question.getCorrectAnswer()) {
+                        /*if (selectedAnswer == question.getCorrectAnswer()) {
                             Log.i(MainActivity.TAG, "score++");
                             score += 1;
-                        }
+                        }*/
 
                         processNextQuestion();
                     }
@@ -150,45 +153,39 @@ public class QuestionsScreen extends ActionBarActivity {
 
     private void processNextQuestion() {
 
-        Log.i(MainActivity.FOO, "++++++++++++++++++++++++++++++++++++++++++++++++++");
-        for (int k=0; k<qs.questionsVO.length; k++) {
-            Log.i(MainActivity.FOO, ">>>>>>>>>> k : "+k+" / " + qs.questionsVO[k].getChoices());
-        }
-        Log.i(MainActivity.FOO, "++++++++++++++++++++++++++++++++++++++++++++++++++");
-        //Log.i(MainActivity.FOO, ">>>>>>>>>> " + qs.questionsVO[0].getChoices());
-
         previousBtn.setEnabled(true);
 
-        currentQuestion++;
-
         adapter.clear();
-        //adapter.remove(adapter.getItem(0));
-
 
         if (currentQuestion < qs.questionsVO.length) {
 
-            if (storedAnswer.size() == currentQuestion+1) { // check to see if it's the first or not
-                listView.setItemChecked(storedAnswer.get(currentQuestion), true);
+            if (storedAnswer.length == currentQuestion+1) { // check to see if it's the first or not
+                listView.setItemChecked(storedAnswer[currentQuestion], true);
             } else {
-                storedAnswer.add(selectedAnswer);
+                storedAnswer[currentQuestion] = selectedAnswer;
+                Log.i(MainActivity.TAG, "storedAnswer[currentQuestion] : " + storedAnswer[currentQuestion]);
                 listView.setItemChecked(0, true);
                 selectedAnswer = 0; // re-init selectedAnswer because if the correct answer is 0 and nothing is clicked, the value of selectedAnswer will be the previous one
             }
 
-            question = qs.questionsVO[currentQuestion];
+            currentQuestion++;
 
-            adapter.addAll(question.getChoices());
+            if (currentQuestion == qs.questionsVO.length) { // no more questions
 
+                computeScore();
 
-            question_tf.setText(question.getQuestion());
+            } else {
+
+                question = qs.questionsVO[currentQuestion];
+
+                adapter.addAll(question.getChoices());
+
+                question_tf.setText(question.getQuestion());
+            }
 
         } else { // no more questions
 
-            question_tf.setText("");
-            previousBtn.setEnabled(false);
-            nextBtn.setEnabled(false);
-
-            Toast.makeText(this, "Score : " + score, Toast.LENGTH_LONG).show();
+            computeScore();
         }
     }
 
@@ -196,20 +193,11 @@ public class QuestionsScreen extends ActionBarActivity {
 
     private void processPreviousQuestion() {
 
-
-        Log.i(MainActivity.FOO, "--------------------------------------------------");
-        for (int k=0; k<qs.questionsVO.length; k++) {
-            Log.i(MainActivity.FOO, ">>>>>>>>>> k : "+k+" / " + qs.questionsVO[k].getChoices());
-        }
-        Log.i(MainActivity.FOO, "--------------------------------------------------");
-
         currentQuestion--;
 
         adapter.clear();
 
-        selectedAnswer = storedAnswer.get(currentQuestion);
-
-        listView.setItemChecked(selectedAnswer, true);
+        selectedAnswer = storedAnswer[currentQuestion];
 
         if (currentQuestion == 0) {
 
@@ -220,10 +208,29 @@ public class QuestionsScreen extends ActionBarActivity {
 
         adapter.addAll(question.getChoices());
 
+        listView.setItemChecked(selectedAnswer, true);
+
         question_tf.setText(question.getQuestion());
 
-        Log.i(MainActivity.TAG, "selectedAnswer : " + selectedAnswer);
+        Log.i(MainActivity.TAG, "selectedAnswer  : " + selectedAnswer);
+        Log.i(MainActivity.TAG, "currentQuestion : " + currentQuestion);
+        Log.i(MainActivity.TAG, "storedAnswer[currentQuestion] : " + storedAnswer[currentQuestion]);
         Log.i(MainActivity.TAG, "correct answer : " + question.getCorrectAnswer());
+    }
 
+    private void computeScore() {
+
+        int storedAnswerLength = storedAnswer.length;
+        for(int i=0; i<storedAnswerLength; i++) {
+            if (qs.questionsVO[i].getCorrectAnswer() == storedAnswer[i]) {
+                score++;
+            }
+        }
+
+        question_tf.setText("");
+        previousBtn.setEnabled(false);
+        nextBtn.setEnabled(false);
+
+        Toast.makeText(this, "Score : " + score, Toast.LENGTH_LONG).show();
     }
 }
