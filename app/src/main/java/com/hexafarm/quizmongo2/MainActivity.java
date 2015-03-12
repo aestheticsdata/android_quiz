@@ -1,5 +1,6 @@
 package com.hexafarm.quizmongo2;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -33,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends ActionBarActivity implements Serializable {
+public class MainActivity extends Activity implements Serializable {
 
 
     public static String TAG = "quiz";
