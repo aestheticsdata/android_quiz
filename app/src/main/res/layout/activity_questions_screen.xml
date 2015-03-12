@@ -49,14 +49,18 @@
         </RadioGroup>-->
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/question"
+            android:gravity="center"
             android:textSize="15sp"
             android:text="question"
-            android:textColor="#0000ff"
+            android:textStyle="bold"
+            android:textColor="#ff36699b"
             android:textAllCaps="true"
-            android:layout_gravity="center"/>
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="#ffb1ccde" />
 
         <ListView
             android:layout_width="match_parent"
