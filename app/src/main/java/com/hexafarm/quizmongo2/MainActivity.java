@@ -108,6 +108,7 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
             String myResponse = "";
 
             try {
+                // http://stackoverflow.com/questions/9767952/how-to-add-parameters-to-httpurlconnection-using-post
                 URL url = new URL(wsUrl[0]);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(10000);
