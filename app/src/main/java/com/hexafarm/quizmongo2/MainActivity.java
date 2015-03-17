@@ -1,6 +1,5 @@
 package com.hexafarm.quizmongo2;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,22 +13,23 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,28 +107,32 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
 
             String myResponse = "";
 
-            HttpClient httpClient = new DefaultHttpClient();
-
-            HttpPost request = new HttpPost(wsUrl[0]);
-
-            List<NameValuePair> params = new ArrayList<>();
-
-            params.add(new BasicNameValuePair("username", username));
-            params.add(new BasicNameValuePair("password", password));
-
-
             try {
-                request.setEntity(new UrlEncodedFormEntity(params));
+                URL url = new URL(wsUrl[0]);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
 
-            } catch (UnsupportedEncodingException e)
-            {
-                e.printStackTrace();
-            }
+                List<NameValuePair> params = new ArrayList<>();
 
-            try {
-                HttpResponse response = httpClient.execute(request);
+                params.add(new BasicNameValuePair("username", username));
+                params.add(new BasicNameValuePair("password", password));
 
-                int statusCode = response.getStatusLine().getStatusCode();
+
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getQuery(params));
+                writer.flush();
+                writer.close();
+                os.close();
+
+                conn.connect();
+
+                int statusCode = conn.getResponseCode();
 
                 Log.i(TAG, "status code : " + statusCode);
 
@@ -138,7 +142,7 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
 
                 } else {
 
-                    InputStream content = response.getEntity().getContent();
+                    InputStream content = conn.getInputStream();
 
                     BufferedReader buffer = new BufferedReader(new InputStreamReader(content));
                     String s = "";
@@ -146,15 +150,22 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
                     while((s = buffer.readLine()) != null) {
                         myResponse += s;
                     }
+
+                    Log.i(MainActivity.TAG, "json : " + myResponse);
                 }
 
-            } catch (ClientProtocolException e) {
+            } catch (MalformedURLException e) {
 
-                e.printStackTrace();
+                Log.i(MainActivity.TAG, "MalformedURLException");
+
+            } catch (ProtocolException e) {
+
+                Log.i(MainActivity.TAG, "ProtocolException");
 
             } catch (IOException e) {
 
-                e.printStackTrace();
+                Log.i(MainActivity.TAG, "IOException");
+
             }
 
             return myResponse;
@@ -162,14 +173,11 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
 
         @Override
         protected void onPostExecute(String result) {
-            //TextView tf = (TextView) findViewById(R.id.main_tf);
-            //tf.setText(result);
 
             if(result.equals("unauthorized")) {
                 warning.setText("Unauthorized");
             } else {
                 warning.setText("");
-                //Log.i(TAG, result);
 
                 Intent questionIntent = new Intent(MainActivity.this, QuestionsScreen.class);
 
@@ -184,6 +192,26 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
 
                 startActivity(questionIntent);
             }
+        }
+
+        private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException
+        {
+            StringBuilder result = new StringBuilder();
+            boolean first = true;
+
+            for (NameValuePair pair : params)
+            {
+                if (first)
+                    first = false;
+                else
+                    result.append("&");
+
+                result.append(URLEncoder.encode(pair.getName(), "UTF-8"));
+                result.append("=");
+                result.append(URLEncoder.encode(pair.getValue(), "UTF-8"));
+            }
+
+            return result.toString();
         }
 
     }
@@ -218,21 +246,6 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
                     }
                 }
         );
-
-        /*login_button.setOnClickListener(
-                new Button.OnClickListener() {
-                    public void onClick(View v) {
-
-                        username = usernameView.getText().toString();
-                        password = passwordView.getText().toString();
-
-                        new DownLoadHXFjson().execute(new String[] {getResources().getString(R.string.ws)});
-
-                        login_button.setClickable(false);
-                    }
-                }
-        );*/
-
 
         login_button.setOnClickListener(this);
     }
