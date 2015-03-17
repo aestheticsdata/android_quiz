@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements Serializable {
+public class MainActivity extends ActionBarActivity implements Serializable, Button.OnClickListener {
 
 
     public static String TAG = "quiz";
@@ -51,6 +51,8 @@ public class MainActivity extends Activity implements Serializable {
 
     private TextView warning;
 
+    private Button login_button;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,8 @@ public class MainActivity extends Activity implements Serializable {
 
         warning = (TextView) findViewById(R.id.warning);
         warning.setText("");
+
+        login_button = (Button) findViewById(R.id.login_button);
 
         this.init();
     }
@@ -84,6 +88,16 @@ public class MainActivity extends Activity implements Serializable {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View v) {
+        username = usernameView.getText().toString();
+        password = passwordView.getText().toString();
+
+        new DownLoadHXFjson().execute(new String[] {getResources().getString(R.string.ws)});
+
+        login_button.setClickable(false);
     }
 
     private class DownLoadHXFjson extends AsyncTask<String, Void, String> {
@@ -205,7 +219,7 @@ public class MainActivity extends Activity implements Serializable {
                 }
         );
 
-        login_button.setOnClickListener(
+        /*login_button.setOnClickListener(
                 new Button.OnClickListener() {
                     public void onClick(View v) {
 
@@ -217,6 +231,11 @@ public class MainActivity extends Activity implements Serializable {
                         login_button.setClickable(false);
                     }
                 }
-        );
+        );*/
+
+
+        login_button.setOnClickListener(this);
     }
+
+
 }
