@@ -141,6 +141,8 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
 
                     myResponse = "unauthorized";
 
+                    login_button.setClickable(true);
+
                 } else {
 
                     InputStream content = conn.getInputStream();
