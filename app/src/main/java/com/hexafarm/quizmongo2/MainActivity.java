@@ -1,6 +1,9 @@
 package com.hexafarm.quizmongo2;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -12,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -95,9 +99,19 @@ public class MainActivity extends ActionBarActivity implements Serializable, But
         username = usernameView.getText().toString();
         password = passwordView.getText().toString();
 
-        new DownLoadHXFjson().execute(new String[] {getResources().getString(R.string.ws)});
+        ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        login_button.setClickable(false);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+        if (networkInfo != null) {
+            new DownLoadHXFjson().execute(new String[] {getResources().getString(R.string.ws)});
+
+            login_button.setClickable(false);
+        } else {
+            Toast.makeText(this, "Internet connection not available", Toast.LENGTH_LONG).show();
+        }
+
+
     }
 
     private class DownLoadHXFjson extends AsyncTask<String, Void, String> {
